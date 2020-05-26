@@ -20,6 +20,7 @@ yarn add react-action-plug
 ## Usage
 
 ```typescript
+import React from 'react';
 import {createActionPlug, useActionPlug, useTrigger} from 'react-action-plug';
 
 // 1. Define action plug
@@ -62,6 +63,7 @@ However, you can create a boundary for the action to take effect. A trigger outs
 This feature is useful when there are multiple components on the same screen that use the same action handler.
 
 ```typescript
+import React from 'react';
 import {createActionPlug, createBoundary} from 'react-action-plug';
 
 const increment = createActionPlug();
