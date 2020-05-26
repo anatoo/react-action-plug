@@ -1,0 +1,52 @@
+{
+  "name": "react-action-plug",
+  "version": "0.0.1",
+  "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anatoo/react-action-plug.git"
+  },
+  "description": "A React library for pluggable action interface between components",
+  "author": "Kubota Mitsunori <antoo.jp@gmail.com>",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "dev": "rm -rf dist && parcel examples/index.html --open",
+    "prepublishOnly": "yarn build # runs before publish",
+    "build": "rm -rf dist && ./node_modules/.bin/tsc",
+    "build:watch": "rm -rf dist && ./node_modules/.bin/tsc -w",
+    "test:browser": "yarn tsc && jest --env=jsdom",
+    "test:browser:watch": "yarn tsc && jest --watch --env=jsdom",
+    "test:watch": "yarn test:browser:watch && yarn test:server:watch",
+    "test": "yarn test:browser && yarn test:server"
+  },
+  "peerDependencies": {
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "devDependencies": {
+    "@testing-library/react-hooks": "^3.0.0",
+    "@types/jest": "^24.0.18",
+    "@types/react": "^16.9.2",
+    "@types/react-dom": "^16.8.4",
+    "jest": "^24.7.1",
+    "parcel-bundler": "^1.12.3",
+    "react": "^16.13.1",
+    "react-dom": "^16.13.1",
+    "react-test-renderer": "^16.8.6",
+    "react-testing-library": "^8.0.0",
+    "ts-jest": "^24.0.0",
+    "typescript": "^3.9.3"
+  },
+  "files": [
+    "dist"
+  ],
+  "keywords": [
+    "react",
+    "hook",
+    "use",
+    "react-hook",
+    "react-component",
+    "action"
+  ]
+}
