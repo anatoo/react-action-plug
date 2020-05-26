@@ -4,14 +4,14 @@ import {createActionPlug, useActionPlug, useTrigger, createBoundary} from '../sr
 
 const increment = createActionPlug<number>('increment');
 const set = createActionPlug<number>('set');
-const CounterBoundary = createBoundary([increment, set]);
+const CounterActionBoundary = createBoundary([increment, set]);
 
 function Exmaple() {
-  useActionPlug(increment, (payload: number) => {
+  useActionPlug(increment, (payload) => {
     setCount(count + payload);
   });
 
-  useActionPlug(set, (payload: number) => {
+  useActionPlug(set, (payload) => {
     setCount(payload);
   });
 
@@ -41,10 +41,10 @@ function MyButton() {
 
 function Counter() {
   return (
-    <CounterBoundary>
+    <CounterActionBoundary>
       <MyButton />
       <Exmaple />
-    </CounterBoundary>
+    </CounterActionBoundary>
   );
 }
 

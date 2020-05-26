@@ -2,6 +2,7 @@ import {useEffect, createContext, useState, useContext, useMemo} from 'react';
 import React from 'react';
 
 export interface ActionPlug<T> {
+  _type?: T;
   displayName: string;
 }
 
