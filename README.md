@@ -1,4 +1,6 @@
-# `react-action-plug`
+# react-action-plug
+
+[![npm version](https://badge.fury.io/js/react-action-plug.svg)](https://badge.fury.io/js/react-action-plug)
 
 A React library for pluggable action interface between components.
 
