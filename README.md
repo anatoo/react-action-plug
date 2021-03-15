@@ -23,16 +23,25 @@ yarn add react-action-plug
 
 ```typescript
 import React from 'react';
-import {createActionPlug, useActionPlug, useTrigger} from 'react-action-plug';
+import {createActionPlug} from 'react-action-plug';
 
-// 1. Define action plug
-const increment = createActionPlug<number>();
+// Define action plug
+type MyActions = {
+  increment(n: number): void;
+  reset(): void;
+};
+const {Boundary, useActionHandlers, useActions} = createActionPlug<MyActions>();
 
 function Counter() {
   const [count, setCount] = React.useState(0);
-  // 2. Prepare an action handler to increment counter state
-  useActionPlug(increment, (payload: number) => {
-    setCount(count + payload);
+  // Prepare action handlers to do something
+  useActionHandlers({
+    increment(n: number) {
+      setCount(count => count + n);
+    },
+    reset() {
+      setCount(0);
+    }
   });
 
   return (
@@ -41,113 +50,85 @@ function Counter() {
 }
 
 function Controller() {
-  // 3. Trigger "increment" action when click
-  const trigger = useTrigger();
+  const {increment, reset} = useActions();
   return (
-    <button onClick={() => trigger(increment, 1)}>click!</button>
+    <>
+      {/* Trigger "increment" action when click */}
+      <button onClick={() => increment(1)}>click!</button>
+  
+      {/* Trigger "reset" action when click */}
+      <button onClick={() => reset()}>reset</button>
+    </>
   );
 }
 
 function App() {
-  return <>
+  // Wrap with Boundary component, which specifies the scope of the actions and those handlers.
+  return <Boundary>
     <Controller />
     <Counter />
-  </>;
-}
-```
-
-### Create action boundaries
-
-The scope of the action is global by default. When an action is triggered, all the handlers for that action will be called.
-
-However, you can create a boundary for the action to take effect. A trigger outside the boundary does not call the handler function inside the boundary.
-
-This feature is useful when there are multiple components on the same screen that use the same action handler.
-
-```typescript
-import React from 'react';
-import {createActionPlug, createBoundary} from 'react-action-plug';
-
-const increment = createActionPlug();
-const decrement = createActionPlug();
-const CounterBoundary = createBoundary([increment, decrement]);
-
-function App() {
-  return <>
-    <CounterBoundary>
-      <Controller />
-      <Counter />
-    </CounterBoundary>
-
-    <CounterBoundary>
-      <Controller />
-      <Counter />
-    </CounterBoundary>
-  </>;
+  </Boundary>;
 }
 ```
 
 ## API
 
-### createActionPlug<T = undefined>(displayName?: string)
+### createActionPlug<T = {[actionName: string]: (payload: any) => void>()
 
-* `<T>` - Type for the action payload. Default: `undefined`.
-* `displayName` - Display name for the action plug.
+* `<T>` - Type for the actions.
 
 ```typescript
-const increment = createActionPlug<number>('increment');
+type Actions = {
+  increment(): void;
+}
+const {Boundary, useActions, useActionHandlers} = createActionPlug<Actions>();
 ```
 
-### useActionPlug<T>(actionPlug: ActionPlug<T>, handler: (payload: T) => void)
+### useActionHandlers(handlers: Partial<T>)
 
-Prepare a handler function for passed action plug.
-
-* `actionPlug: ActionPlug<T>`
-* `handler: (payload: T) => void` - `handler` is called on trigger the action plug.
+Prepare a handler functions for the action plug.
 
 ```typescript
 function MyComponent() {
   const [state, setState] = useState(0);
-  useActionPlug(increment, (payload: number) => {
-    setState(state + paylod);
+  useActionHandlers({
+    increment() {
+      setState(count => count + 1);
+    }
   });
 
   return <div>count: {state}</div>;
 }
 ```
 
-### useTrigger()
+### useActions()
 
 Get a function to trigger action plug with something payload.
 
 ```typescript
 function MyController() {
-  const trigger = useTrigger();
+  const actions = useActions();
   const handlerClick = () => {
-    trigger(increment, 1);
+    actions.increment();
   };
 
   return <div onClick={handleClick}>increment</div>;
 }
 ```
 
-### createBoundary(actionPlugs: ActionPlug<any>[]): React.FC<{children: React.ReactNode}>
+### Boundary: React.FC<{children: React.ReactNode}>
 
 Create a boundary for action plug trigger to be enabled.
 
-* `actionPlugs: ActionPlug<any>[]` - An array of action plugs to be used for the boundary.
-
 ```typescript
-const increment = createActionPlug();
-const decrement = createActionPlug();
-const CounterBoundary = createBoundary([increment, decrement]);
+const {Boundary, useActions, useActionHandlers} = createActionPlug<{/* ... */}>();
 
 function Container() {
   return (
-    <CounterBoundary>
+    <Boundary>
       <Controller />
       <Counter />
-    </CounterBoundary>
+    </Boundary>
   );
 }
 ```

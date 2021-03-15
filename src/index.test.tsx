@@ -1,42 +1,19 @@
-import {renderHook} from '@testing-library/react-hooks';
-import {createActionPlug, ActionPlugManager} from './index';
+import {createActionPlug, ActionPlugManager} from './';
 
-describe('createActionPlug', () => {
-  it('should works normally', () => {
-    const action = createActionPlug('action');
-  });
+test('ActionPlugManager', () => {
+  const manager = new ActionPlugManager();
+  let called = false;
+  const listener = () => {
+    called = true;
+  };
+
+  manager.addListener('noop', listener);
+  expect(manager.listeners.get('noop')!.size).toBe(1);
+
+  expect(called).toBe(false);
+  manager.dispatch('noop', null);
+  expect(called).toBe(true);
+
+  manager.removeListener('noop', listener);
+  expect(manager.listeners.get('noop')!.size).toBe(0);
 });
-
-describe('ActionPlugManager', () => {
-  it('should works normally', () => {
-    const action = createActionPlug('action');
-    const manager = new ActionPlugManager([action]);
-    let called = false;
-    const handler = () => {
-      called = true;
-    };
-    manager.addHandler(action, handler);
-    manager.trigger(action, undefined);
-    expect(called).toBe(true);
-
-    called = false;
-    manager.removeHandler(action, handler);
-    manager.trigger(action, undefined);
-    expect(called).toBe(false);
-  });
-
-  it('should have payload on trigger', () => {
-    const action = createActionPlug<number>('action');
-
-    const manager = new ActionPlugManager([action]);
-    let number = 0;
-    const handler = (payload: number) => {
-      number = payload;
-    };
-
-    manager.addHandler(action, handler);
-    manager.trigger(action, 6);
-    expect(number).toBe(6);
-  });
-});
-

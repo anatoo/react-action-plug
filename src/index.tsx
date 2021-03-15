@@ -1,112 +1,95 @@
-import {useEffect, createContext, useState, useContext, useMemo} from 'react';
+import {useEffect, ReactNode, createContext, useContext, useMemo} from 'react';
 import React from 'react';
 
-export interface ActionPlug<T> {
-  _type?: T;
-  displayName: string;
-}
-
-export function createActionPlug<T = undefined>(displayName?: string): ActionPlug<T> {
-  return {
-    displayName: displayName ?? 'unnamed',
-  };
-}
-
-export type ActionHandler<T> = ((payload: T) => void);
-
-export function useTrigger<T>(): ((actionPlug: ActionPlug<T>, payload: T) => void) {
-  const manager = useContext(ActionPlugContext);
-  return ((actionPlug: ActionPlug<T>, payload: T) => {
-    manager.trigger(actionPlug, payload);
-  });
-}
-
-export function useActionPlug<T>(plug: ActionPlug<T>, handler: ActionHandler<T>): void {
-  const manager = useContext(ActionPlugContext);
-  useEffect(() => {
-    manager.addHandler(plug, handler);
-    return () => {
-      manager.removeHandler(plug, handler);
-    };
-  }, [plug, handler]);
-}
-
-export function createBoundary(actionPlugs: ActionPlug<any>[]): React.FC<{children: React.ReactNode}> {
-  return ({children}: {children: React.ReactNode}) => {
-    const parent = useContext(ActionPlugContext);
-    const manager = useMemo(() => new ActionPlugManager(actionPlugs, parent), []);
-
-    return (
-      <ActionPlugContext.Provider value={manager}>
-        {children}
-      </ActionPlugContext.Provider>
-    );
-  };
+type BaseActions = {
+  [key: string]: (payload: any) => void;
 }
 
 export class ActionPlugManager {
-  handlersMap = new Map<ActionPlug<any>, Set<ActionHandler<any>>>();
-  _parent: ActionPlugManager | null = null;
-  plugs: Set<ActionPlug<any>>;
+  listeners = new Map<string, Set<(payload: any) => void>>();
 
-  constructor(plugs: ActionPlug<any>[], parent?: ActionPlugManager) {
-    this.plugs = new Set(plugs);
-    if (parent) {
-      this._parent = parent;
-    }
-  }
-
-  get parent(): ActionPlugManager {
-    return this._parent!;
-  }
-
-  isRoot() {
-    return this.plugs.size === 0 && !this.parent;
-  }
-
-  _getHandlers(plug: ActionPlug<any>): Set<ActionHandler<any>> {
-    if (!this.handlersMap.has(plug)) {
-      const set = new Set<ActionHandler<any>>();
-      this.handlersMap.set(plug, set);
-      return set;
-    }
-
-    return this.handlersMap.get(plug)!;
-  }
-
-  addHandler(plug: ActionPlug<any>, handler: ActionHandler<any>): void {
-    if (!this.isRoot() && !this.plugs.has(plug)) {
-      this.parent!.addHandler(plug, handler);
+  addListener(key: string, listener: (payload: any) => void): void {
+    const set = this.listeners.get(key);
+    if (set) {
+      set.add(listener);
     } else {
-      this._getHandlers(plug).add(handler);
+      const set = new Set<(payload: any) => void>();
+      set.add(listener);
+      this.listeners.set(key, set);
     }
   }
 
-  removeHandler(plug: ActionPlug<any>, handler: ActionHandler<any>): void {
-    if (!this.isRoot() && !this.plugs.has(plug)) {
-      this.parent!.removeHandler(plug, handler);
-    } else {
-      this._getHandlers(plug).delete(handler);
+  removeListener(key: string, listener: (payload: any) => void): void {
+    const set = this.listeners.get(key);
+    if (set) {
+      set.delete(listener);
     }
   }
 
-  trigger<T>(plug: ActionPlug<T>, payload: T): void {
-
-    if (!this.isRoot() && !this.plugs.has(plug)) {
-      this.parent!.trigger(plug, payload);
-    } else {
-      for (const handler of Array.from(this._getHandlers(plug))) {
-        handler(payload);
+  dispatch(key: string, payload: any): void {
+    const listeners = this.listeners.get(key);
+    if (listeners) {
+      for (const listener of Array.from(listeners)) {
+        listener(payload);
       }
     }
   }
-
-  clear(): void {
-    this.handlersMap.clear();
-  }
 }
 
-export const rootActionPlugManager = new ActionPlugManager([], undefined);
+export const globalActionPlugManager = new ActionPlugManager();
+export const ActionPlugContext = createContext<ActionPlugManager | null>(null);
 
-const ActionPlugContext = createContext<ActionPlugManager>(rootActionPlugManager);
+export type ActionPlug<T extends BaseActions> = {
+  Boundary: React.FC<{children: ReactNode}>;
+  useActionHandlers: (handlers: Partial<T>) => void;
+  useActions: () => T;
+}
 
+export function createActionPlug<T extends BaseActions>(): ActionPlug<T> {
+
+  return {
+    Boundary: ({children}: {children: ReactNode}) => {
+      const contextValue = useMemo(() => new ActionPlugManager(), []);
+
+      return <ActionPlugContext.Provider value={contextValue} children={children} />;
+    },
+
+    useActionHandlers: (handlers: Partial<T>) => {
+      const manager = useContext(ActionPlugContext);
+
+      if (!manager) {
+        throw Error();
+      }
+
+      useEffect(() => {
+        for (const [key, listener] of Object.entries(handlers)) {
+          manager.addListener(key, listener);
+        }
+        return () => {
+          for (const [key, listener] of Object.entries(handlers)) {
+            manager.removeListener(key, listener);
+          }
+        }
+      }, [handlers]);
+    },
+
+    useActions: (): T => {
+      const manager = useContext(ActionPlugContext);
+
+      if (!manager) {
+        throw Error();
+      }
+
+      return new Proxy<any>({}, {
+        get(target, key) {
+          if (typeof key === 'string') {
+            return (payload: any) => {
+              manager.dispatch(key, payload);
+            };
+          }
+          throw Error();
+        }
+      });
+    },
+  }
+}

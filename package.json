@@ -11,14 +11,12 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "dev": "rm -rf dist && parcel examples/index.html --open",
+    "dev": "rm -rf dist && parcel examples/*.html --open",
     "prepublishOnly": "yarn build # runs before publish",
     "build": "rm -rf dist && ./node_modules/.bin/tsc",
     "build:watch": "rm -rf dist && ./node_modules/.bin/tsc -w",
-    "test:browser": "yarn tsc && jest --env=jsdom",
-    "test:browser:watch": "yarn tsc && jest --watch --env=jsdom",
-    "test:watch": "yarn test:browser:watch && yarn test:server:watch",
-    "test": "yarn test:browser && yarn test:server"
+    "test": "yarn tsc && jest --env=jsdom",
+    "test:watch": "yarn tsc && jest --watch --env=jsdom"
   },
   "peerDependencies": {
     "react": "^16.8.6",
