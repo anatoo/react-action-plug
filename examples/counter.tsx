@@ -7,11 +7,11 @@ type Actions = {
   reset(): void;
 };
 
-const {Boundary, useActionHandlers, useActions} = createActionPlug<Actions>();
+const CounterPlug = createActionPlug<Actions>();
 
 function Example() {
   const [count, setCount] = React.useState(0);
-  useActionHandlers({
+  CounterPlug.useActionHandlers({
     increment(n) {
       setCount(count => count + n);
     },
@@ -28,7 +28,7 @@ function Example() {
 };
 
 function Controller() {
-  const {increment, reset} = useActions();
+  const {increment, reset} = CounterPlug.useActions();
 
   return <div>
     <button onClick={() => increment(1)}>+1</button>
@@ -39,10 +39,10 @@ function Controller() {
 
 function Counter() {
   return (
-    <Boundary >
+    <CounterPlug.Boundary>
       <Example />
       <Controller />
-    </Boundary>
+    </CounterPlug.Boundary>
   );
 }
 

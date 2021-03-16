@@ -36,8 +36,6 @@ export class ActionPlugManager {
   }
 }
 
-export const globalActionPlugManager = new ActionPlugManager();
-export const ActionPlugContext = createContext<ActionPlugManager | null>(null);
 
 export type ActionPlug<T extends BaseActions> = {
   Boundary: React.FC<{children: ReactNode}>;
@@ -47,19 +45,17 @@ export type ActionPlug<T extends BaseActions> = {
 
 export function createActionPlug<T extends BaseActions>(): ActionPlug<T> {
 
+  const PlugContext = createContext<ActionPlugManager>(new ActionPlugManager());
+
   return {
     Boundary: ({children}: {children: ReactNode}) => {
       const contextValue = useMemo(() => new ActionPlugManager(), []);
 
-      return <ActionPlugContext.Provider value={contextValue} children={children} />;
+      return <PlugContext.Provider value={contextValue} children={children} />;
     },
 
     useActionHandlers: (handlers: Partial<T>) => {
-      const manager = useContext(ActionPlugContext);
-
-      if (!manager) {
-        throw Error();
-      }
+      const manager = useContext(PlugContext);
 
       useEffect(() => {
         for (const [key, listener] of Object.entries(handlers)) {
@@ -74,11 +70,7 @@ export function createActionPlug<T extends BaseActions>(): ActionPlug<T> {
     },
 
     useActions: (): T => {
-      const manager = useContext(ActionPlugContext);
-
-      if (!manager) {
-        throw Error();
-      }
+      const manager = useContext(PlugContext);
 
       return new Proxy<any>({}, {
         get(target, key) {
