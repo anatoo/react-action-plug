@@ -1,6 +1,6 @@
 import React from 'react';
 import {render} from 'react-dom';
-import {createActionPlug} from '../src';
+import {createActionPlug} from '../';
 
 type Actions = {
   increment(n: number): void;
