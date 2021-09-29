@@ -9,6 +9,7 @@
     "declaration": true,
     "sourceMap": true,
     "jsx": "react",
+    "emitDeclarationOnly": true,
     "esModuleInterop": true,
     "types": [
       "jest"
@@ -17,5 +18,5 @@
   "include": [
     "src"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules", "**/*.test.ts", "**/*.test.tsx"]
 }

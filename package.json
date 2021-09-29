@@ -12,7 +12,7 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "build": "rm -rf dist && ./node_modules/.bin/tsc",
+    "build": "rm -rf dist && ./node_modules/.bin/tsc && parcel build src/index.tsx",
     "build:watch": "./node_modules/.bin/tsc -w",
     "dev": "parcel examples/*.html --open",
     "prepublishOnly": "yarn build # runs before publish",
